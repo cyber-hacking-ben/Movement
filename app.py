@@ -1,3 +1,4 @@
+from pydantic import BaseModel
 from fastapi import FastAPI
 import subprocess
 import tempfile
@@ -47,26 +48,34 @@ AptosFramework = { git = "https://github.com/aptos-labs/aptos-core", subdir = "a
 # -------------------------------------------------------------------
 # POST /compile
 #
-# This endpoint accepts Move source code as a string,
+# This endpoint accepts Move source code as JSON,
 # compiles it using the Movement CLI, and returns:
 # - compiler output on success
 # - structured error output on failure
 #
 # This is the core of the "compiler as a service".
 # -------------------------------------------------------------------
+
+class CompileRequest(BaseModel):
+    code: str
+
+
 @app.post("/compile")
-def compile_move(code: str):
+def compile_move(request: CompileRequest):
     """
     Compiles Move smart contract code and returns compiler output.
 
     Parameters:
-        code (str): Raw Move source code sent by the client
+        request (CompileRequest): JSON body containing Move source code
 
     Returns:
         JSON object containing:
         - success: boolean
         - stdout OR error: compiler output
     """
+
+    # Extract Move source code from request body
+    code = request.code
 
     # ---------------------------------------------------------------
     # Create a temporary directory for this compilation run
