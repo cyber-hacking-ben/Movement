@@ -20,7 +20,7 @@ app = FastAPI(
 # UPDATED Move.toml template to Allow move 2 language
 # Line 28 edition = "2024.beta"   #THIS IS THE MAGIC LINE TO FIX THE ERROR
 # -------------------------------------------------------------------
-MOVE_TOML = """\
+'''MOVE_TOML = """\
 [package]
 name = "compiler_package"
 version = "1.0.0"
@@ -36,6 +36,29 @@ hello = "0x42"
 # Pointing to the COPIED path inside the container
 MoveStdlib = { local = "/frameworks/aptos-core/aptos-move/framework/move-stdlib" }
 AptosFramework = { local = "/frameworks/aptos-core/aptos-move/framework/aptos-framework" }
+"""
+'''
+# -------------------------------------------------------------------
+# UPDATED Move.toml template (Lightweight Version)
+# -------------------------------------------------------------------
+MOVE_TOML = """\
+[package]
+name = "compiler_package"
+version = "1.0.0"
+upgrade_policy = "compatible"
+edition = "2024.beta" 
+
+[addresses]
+std = "0x1"
+# aptos_framework = "0x1"  <-- Commented out
+hello = "0x42"
+
+[dependencies]
+# Keep the Standard Library (It's small and safe)
+MoveStdlib = { local = "/frameworks/aptos-core/aptos-move/framework/move-stdlib" }
+
+# DISABLE the massive framework for now to prevent OOM Crashes
+# AptosFramework = { local = "/frameworks/aptos-core/aptos-move/framework/aptos-framework" }
 """
 
 class CompileRequest(BaseModel):
