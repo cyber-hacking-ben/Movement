@@ -18,13 +18,14 @@ app = FastAPI(
 # This makes compilation offline and instant.
 # -------------------------------------------------------------------
 # UPDATED Move.toml template to Allow move 2 language
+# Line 28 edition = "2024.beta"   #THIS IS THE MAGIC LINE TO FIX THE ERROR
 # -------------------------------------------------------------------
 MOVE_TOML = """\
 [package]
 name = "compiler_package"
 version = "1.0.0"
 upgrade_policy = "compatible"
-edition = "2024.beta"  <-- THIS IS THE MAGIC LINE TO FIX THE ERROR
+edition = "2024.beta"   
 
 [addresses]
 std = "0x1"
