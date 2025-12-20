@@ -1,45 +1,19 @@
-from pydantic import BaseModel
 from fastapi import FastAPI
+from pydantic import BaseModel
 import subprocess
 import tempfile
 import os
+import base64
+import glob
 
 app = FastAPI(
     title="Move Compiler Service",
-    description="A backend service that compiles Move smart contracts using the Movement CLI",
-    version="1.0.0"
+    description="Compiles Move smart contracts and returns bytecode + package metadata",
+    version="1.1.0"
 )
 
 # -------------------------------------------------------------------
-# UPDATED Move.toml template
-# 
-# Key Change: Dependencies are now LOCAL.
-# They point to /frameworks/aptos-core/... which we baked into the Docker image.
-# This makes compilation offline and instant.
-# -------------------------------------------------------------------
-# UPDATED Move.toml template to Allow move 2 language
-# Line 28 edition = "2024.beta"   #THIS IS THE MAGIC LINE TO FIX THE ERROR
-# -------------------------------------------------------------------
-'''MOVE_TOML = """\
-[package]
-name = "compiler_package"
-version = "1.0.0"
-upgrade_policy = "compatible"
-edition = "2024.beta"   
-
-[addresses]
-std = "0x1"
-aptos_framework = "0x1"
-hello = "0x42"
-
-[dependencies]
-# Pointing to the COPIED path inside the container
-MoveStdlib = { local = "/frameworks/aptos-core/aptos-move/framework/move-stdlib" }
-AptosFramework = { local = "/frameworks/aptos-core/aptos-move/framework/aptos-framework" }
-"""
-'''
-# -------------------------------------------------------------------
-# UPDATED Move.toml template (Lightweight Version)
+# Lightweight Move.toml (MoveStdlib only)
 # -------------------------------------------------------------------
 MOVE_TOML = """\
 [package]
@@ -49,15 +23,10 @@ upgrade_policy = "compatible"
 
 [addresses]
 std = "0x1"
-# aptos_framework = "0x1"  <-- Commented out
 hello = "0x42"
 
 [dependencies]
-# Keep the Standard Library (It's small and safe)
 MoveStdlib = { local = "/frameworks/aptos-core/aptos-move/framework/move-stdlib" }
-
-# DISABLE the massive framework for now to prevent OOM Crashes
-# AptosFramework = { local = "/frameworks/aptos-core/aptos-move/framework/aptos-framework" }
 """
 
 class CompileRequest(BaseModel):
@@ -68,41 +37,99 @@ def compile_move(request: CompileRequest):
     code = request.code
 
     with tempfile.TemporaryDirectory() as tmp:
-        move_toml_path = os.path.join(tmp, "Move.toml")
+        # -----------------------------
+        # Write Move.toml
+        # -----------------------------
+        with open(os.path.join(tmp, "Move.toml"), "w") as f:
+            f.write(MOVE_TOML)
+
+        # -----------------------------
+        # Write source file
+        # -----------------------------
         src_dir = os.path.join(tmp, "sources")
         os.mkdir(src_dir)
 
-        with open(move_toml_path, "w") as f:
-            f.write(MOVE_TOML)
-
-        source_file = os.path.join(src_dir, "module.move")
-        with open(source_file, "w") as f:
+        source_path = os.path.join(src_dir, "module.move")
+        with open(source_path, "w") as f:
             f.write(code)
 
+        # -----------------------------
+        # Run compiler
+        # -----------------------------
         try:
-            # Added --skip-fetch-latest-git-deps to force offline mode if the CLI supports it
-            # (Even if it doesn't, the 'local' paths in toml prevent network calls)
             result = subprocess.run(
                 ["movement", "move", "build"],
                 cwd=tmp,
                 capture_output=True,
                 text=True,
-                timeout=400 # Reduced timeout because it should be instant now
+                timeout=400
             )
-
-            if result.returncode != 0:
-                return {
-                    "success": False,
-                    "error": result.stderr or result.stdout # sometimes errors go to stdout in Move
-                }
-
-            return {
-                "success": True,
-                "stdout": result.stdout
-            }
-
         except Exception as e:
             return {
                 "success": False,
                 "error": str(e)
             }
+
+        # -----------------------------
+        # Handle compilation failure
+        # -----------------------------
+        if result.returncode != 0:
+            return {
+                "success": False,
+                "error": result.stderr or result.stdout
+            }
+
+        # -----------------------------
+        # Extract bytecode (.mv files)
+        # -----------------------------
+        bytecode_dir = os.path.join(
+            tmp,
+            "build",
+            "compiler_package",
+            "bytecode_modules"
+        )
+
+        modules = []
+
+        for mv_file in glob.glob(os.path.join(bytecode_dir, "*.mv")):
+            with open(mv_file, "rb") as f:
+                raw = f.read()
+
+            modules.append({
+                "module_name": os.path.basename(mv_file).replace(".mv", ""),
+                "bytecode_base64": base64.b64encode(raw).decode("utf-8"),
+                "size_bytes": len(raw)
+            })
+
+        # -----------------------------
+        # Extract package metadata (.bcs)
+        # -----------------------------
+        metadata_path = os.path.join(
+            tmp,
+            "build",
+            "compiler_package",
+            "package-metadata.bcs"
+        )
+
+        package_metadata = None
+
+        if os.path.exists(metadata_path):
+            with open(metadata_path, "rb") as f:
+                package_metadata = base64.b64encode(f.read()).decode("utf-8")
+
+        # -----------------------------
+        # Final response
+        # -----------------------------
+        return {
+            "success": True,
+            "modules": modules,
+            "package_metadata_bcs": package_metadata,
+            "compiler_stdout": result.stdout,
+            "metadata": {
+                "package_name": "compiler_package",
+                "module_count": len(modules),
+                "language": "Move",
+                "framework": "MoveStdlib"
+            }
+        }
+
