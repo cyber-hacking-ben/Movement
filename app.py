@@ -31,7 +31,7 @@ MOVE_TOML = """\
 name = "compiler_package"
 version = "1.0.0"
 upgrade_policy = "compatible"
-edition = "2024"   
+#edition = "2024"   Is Move 2 ready, but commented out till movement supports Move 2
 
 [addresses]
 std = "0x1"
