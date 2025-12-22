@@ -1,1 +1,9 @@
+[package]
+name = "AptosFramework"
+version = "1.0.0"
 
+[addresses]
+aptos_framework = "0x1"
+
+[dependencies]
+MoveStdlib = { local = "/frameworks/aptos-core/aptos-move/framework/move-stdlib" }
