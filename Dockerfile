@@ -49,9 +49,10 @@ RUN apt-get update && apt-get install -y \
     curl \
     build-essential \
     bash \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Install Rust (Required for Movement CLI runtime)
+# 2. Install Rust
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 ENV PATH="/root/.cargo/bin:$PATH"
 
@@ -62,18 +63,24 @@ RUN curl -LO https://github.com/movementlabsxyz/homebrew-movement-cli/releases/d
  && chmod +x temp_extract/movement \
  && mv temp_extract/movement /usr/local/bin/movement \
  && rm -rf temp_extract movement-move2-testnet-linux-x86_64.tar.gz
- 
-# 4. Install Frameworks
+
+# 4. OPTIMIZED FRAMEWORK SETUP
 WORKDIR /frameworks
 
-# A) Download full Aptos Core (For MoveStdlib only - small & safe)
+# A) Extract ONLY move-stdlib from aptos-core (Discard the rest to save space/RAM)
 RUN curl -L https://github.com/aptos-labs/aptos-core/archive/refs/heads/main.tar.gz \
     | tar -xz \
- && mv aptos-core-main aptos-core
+ && mkdir -p /frameworks/move-stdlib \
+ && mv aptos-core-main/aptos-move/framework/move-stdlib/* /frameworks/move-stdlib/ \
+ && rm -rf aptos-core-main
 
-# B) Copy your LOCAL Stubbed Framework (For AptosFramework - prevents OOM crash)
-# This assumes your local folder is: ./frameworks/stubbed-aptos-framework
+# B) Copy your LOCAL Stubbed Framework
 COPY frameworks/stubbed-aptos-framework /frameworks/stubbed-aptos-framework
+
+# C) FORCE-PATCH the Stub's dependency path
+# We rewrite the Stub's Move.toml to point to our clean /frameworks/move-stdlib
+# This ensures it finds the dependency regardless of what you had locally.
+RUN sed -i 's|MoveStdlib = .*|MoveStdlib = { local = "/frameworks/move-stdlib" }|' /frameworks/stubbed-aptos-framework/aptos_framework/Move.toml
 
 # 5. Setup Python App
 WORKDIR /app
@@ -81,7 +88,6 @@ COPY requirements.txt ./
 RUN --mount=type=cache,target=/root/.cache/pip \
     python -m pip install -r requirements.txt
 
-# Copy application code
 COPY app.py formatter.py ./
 
 EXPOSE 8000
