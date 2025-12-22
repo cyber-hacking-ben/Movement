@@ -31,6 +31,7 @@ MOVE_TOML = """\
 name = "compiler_package"
 version = "1.0.0"
 upgrade_policy = "compatible"
+# edition = "2024.beta"   <-- Keep this commented out for the first test, then enable it.
 
 [addresses]
 std = "0x1"
@@ -38,7 +39,10 @@ aptos_framework = "0x1"
 hello = "0x42"
 
 [dependencies]
-MoveStdlib = { local = "/frameworks/aptos-core/aptos-move/framework/move-stdlib" }
+# 1. Point to the CLEAN stdlib folder we created
+MoveStdlib = { local = "/frameworks/move-stdlib" }
+
+# 2. Point to the Stubs
 AptosFramework = { local = "/frameworks/stubbed-aptos-framework/aptos_framework" }
 """
 
