@@ -34,10 +34,12 @@ upgrade_policy = "compatible"
 
 [addresses]
 std = "0x1"
+aptos_framework = "0x1"
 hello = "0x42"
 
 [dependencies]
 MoveStdlib = { local = "/frameworks/aptos-core/aptos-move/framework/move-stdlib" }
+AptosFramework = { local = "/frameworks/stubbed-aptos-framework/aptos_framework" }
 """
 
 class CompileRequest(BaseModel):
