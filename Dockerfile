@@ -46,7 +46,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     curl \
-    git \
     build-essential \
     bash \
     && rm -rf /var/lib/apt/lists/*
@@ -62,11 +61,13 @@ RUN curl -LO https://github.com/movementlabsxyz/homebrew-movement-cli/releases/d
  && chmod +x temp_extract/movement \
  && mv temp_extract/movement /usr/local/bin/movement \
  && rm -rf temp_extract movement-move2-testnet-linux-x86_64.tar.gz
-
-# Bake aptos-core dependency once at build time
+ 
+# Bake Aptos stdlib once at build time (NO GIT AT RUNTIME)
 WORKDIR /frameworks
-RUN git clone --depth 1 --branch main https://github.com/aptos-labs/aptos-core.git
-
+RUN curl -L https://github.com/aptos-labs/aptos-core/archive/refs/heads/main.tar.gz \
+    | tar -xz \
+ && mv aptos-core-main aptos-core
+ 
 WORKDIR /app
 COPY requirements.txt ./
 RUN --mount=type=cache,target=/root/.cache/pip \
