@@ -43,7 +43,7 @@ hello = "0x42"
 MoveStdlib = { local = "/frameworks/move-stdlib" }
 
 # 2. Point to the Stubs
-AptosFramework = { local = "/frameworks/stubbed-aptos-framework/aptos_framework" }
+AptosFramework = { local = "/frameworks/stubbed-aptos-framework/aptos-framework" }
 """
 
 class CompileRequest(BaseModel):
