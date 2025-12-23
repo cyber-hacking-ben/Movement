@@ -1,5 +1,6 @@
 module aptos_framework::account {
     use std::signer;
+    use std::vector;
 
     struct Account has key, store {
         authentication_key: vector<u8>,
