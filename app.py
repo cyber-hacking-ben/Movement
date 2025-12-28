@@ -5,7 +5,7 @@ import subprocess
 import tempfile
 import os
 import base64
-import glob # Need glob for file matching
+import glob 
 
 from formatter import format_compiler_response
 
@@ -15,49 +15,55 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# CHANGED: Allow all origins to prevent CORS issues during frontend dev
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
 )
 
-# -------------------------------------------------------------------
-# Lightweight Move.toml
-# -------------------------------------------------------------------
-MOVE_TOML = """\
+# CHANGED: Added sender_address field
+class CompileRequest(BaseModel):
+    code: str
+    sender_address: str = "0x1" # Default to 0x1 if not provided
+
+@app.post("/compile")
+def compile_move(request: CompileRequest):
+    # 1. Prepare the Dynamic Address
+    user_addr = request.sender_address.strip()
+    if not user_addr.startswith("0x"):
+        user_addr = f"0x{user_addr}"
+
+    # 2. Dynamic Move.toml Generation
+    # We use an f-string to inject {user_addr}
+    # IMPORTANT: We use double braces {{ }} for the dependencies to escape them!
+    dynamic_move_toml = f"""\
 [package]
 name = "compiler_package"
 version = "1.0.0"
 upgrade_policy = "compatible"
-#edition = "2024"   Is Move 2 ready, but commented out till movement supports Move 2
+#edition = "2024"
 
 [addresses]
 std = "0x1"
 aptos_framework = "0x1"
-hello = "0x42"
+hello = "{user_addr}"   
 
 [dependencies]
-# 1. Point to the CLEAN stdlib folder we created
-MoveStdlib = { local = "/frameworks/move-stdlib" }
-
-# 2. Point to the Stubs
-AptosFramework = { local = "/frameworks/stubbed-aptos-framework/aptos-framework" }
+# Note the double curly braces below: {{ ... }}
+MoveStdlib = {{ local = "/frameworks/move-stdlib" }}
+AptosFramework = {{ local = "/frameworks/stubbed-aptos-framework/aptos-framework" }}
 """
 
-class CompileRequest(BaseModel):
-    code: str
-
-@app.post("/compile")
-def compile_move(request: CompileRequest):
     with tempfile.TemporaryDirectory() as tmp:
         sources_dir = os.path.join(tmp, "sources")
         os.mkdir(sources_dir)
 
-        # Write Move.toml
+        # Write the DYNAMIC Move.toml
         with open(os.path.join(tmp, "Move.toml"), "w") as f:
-            f.write(MOVE_TOML)
+            f.write(dynamic_move_toml)
 
         # Write source file
         with open(os.path.join(sources_dir, "module.move"), "w") as f:
