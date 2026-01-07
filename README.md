@@ -1,8 +1,8 @@
 # Backend Compiler Service
 Here is the official, technical documentation for the Movement Compiler Backend. This is written for other developers, ensuring they understand the architecture, how to run it, and how to build the frontend against it.
 
-##  Movement Compiler Service: Technical Documentation
-### 1. System Overview
+# Movement Compiler Service: Technical Documentation
+# 1. System Overview
 The Movement Compiler Service is a specialized, stateless backend designed to compile Move smart contracts in resource-constrained environments (specifically Render Free Tier with 512MB RAM).
 Unlike standard Move compilers that load the entire 1.5GB+ Aptos Framework into memory, this service utilizes a Stubbed Framework Architecture. It compiles against lightweight "Interface Files" (stubs) rather than heavy implementation files, reducing memory footprint by ~90% while ensuring complete type safety and valid bytecode generation.
 Key Features
@@ -11,7 +11,7 @@ Stateless: No database; files are ephemeral (created in /tmp and deleted after c
 Production Ready: Returns standard .mv bytecode and .bcs metadata compatible with the Movement and Aptos blockchains.
 
 
-### 2. Directory Structure & Prerequisites
+# 2. Directory Structure & Prerequisites
 To run this locally or deploy it, your local project MUST match this exact structure. The Dockerfile relies on copying the frameworks directory.
 
    /project-root
@@ -26,21 +26,21 @@ To run this locally or deploy it, your local project MUST match this exact struc
             └── sources/    # Contains coin.move, account.move, etc.
  
 
-### 3. Local Development Guide
+# 3. Local Development Guide
 Running via Docker (Recommended)
 Since the compiler relies on specific CLI binaries and path rewrites (sed), running raw Python locally is discouraged. Always use Docker.
-#### 1. Build the Image
+1. Build the Image
 code Bash
 
    docker build -t movement-compiler .
  
-#### 2. Run the Container
+2. Run the Container
 code Bash
 
-   ##### Runs on port 8000
+   # Runs on port 8000
 docker run -p 8000:8000 movement-compiler
  
-#### 3. Verify Functionality
+3. Verify Functionality
 Run this curl command to test compilation of a basic contract:
 code Bash
 
@@ -51,17 +51,15 @@ code Bash
   }'
  
 
-### 4. API Reference
+# 4. API Reference
 POST /compile
 Accepts Move source code, compiles it, and returns Base64-encoded bytecode.
 REQUEST BODY
 code JSON
 
-{
-  "code": "module hello::counter { use std::signer; ... }",
-  "sender_address": "0x1234..." // (Optional) Defaults to 0x1. Set this to the user's wallet address for deployment.
+   {
+  "code": "module hello::counter { use std::signer; ... }"
 }
-
  
 Response: Success
 When compilation succeeds (returncode == 0):
@@ -104,27 +102,23 @@ code JSON
 }
  
 
-### 5. Frontend Integration Guide
+# 5. Frontend Integration Guide
 The frontend is responsible for submitting code to this API and handling the deployment using a Wallet Adapter. The backend does not deploy code.
-Calling the API (Next.js Example):
-// inside your compile function
-const res = await axios.post("https://movement-sqto.onrender.com/compile", {
-  code: code,
-  sender_address: walletAccount.address // <--- CRITICAL: Pass connected wallet address
-});
-#### A. Handling Successful Compilation
+A. Handling Successful Compilation
 The frontend receives Base64 strings. The Blockchain RPC requires Uint8Array.
-##### 1. Decode Helper:
+1. Decode Helper:
 code TypeScript
 
-   consw Uint8Array(binaryString.length);
+   const decodeBase64 = (str: string): Uint8Array => {
+  const binaryString = atob(str);
+  const bytes = new Uint8Array(binaryString.length);
   for (let i = 0; i < binaryString.length; i++) {
     bytes[i] = binaryString.charCodeAt(i);
   }
   return bytes;
 };
  
-##### 2. Constructing the Transaction (Aptos SDK):
+2. Constructing the Transaction (Aptos SDK):
 code TypeScript
 
    const handleDeploy = async (apiResponse: any) => {
@@ -156,19 +150,13 @@ code TypeScript
   console.log("Tx Hash:", response.hash);
 };
  
-#### B. Handling Compilation Errors
+B. Handling Compilation Errors
 The formatter.py script parses the raw Rust CLI stderr into a structured JSON array.
 UI Mapping: Map over the errors array.
 Highligting: Use line and column to highlight syntax errors in the Code Editor (e.g., Monaco Editor or CodeMirror).
 Message: Display message and source_line in a console output window.
 
-### 6. Architecture & Maintenance Notes
-Dynamic Address Injection
-To ensure deployed bytecode belongs to the correct user, the backend performs Dynamic Compilation:
-The API accepts a sender_address (e.g., 0xA1B2...).
-It dynamically generates a Move.toml for that specific request, injecting the address into the hello named address.
-The compiler bakes this address into the binary.
-Result: The bytecode signature matches the user's wallet, allowing successful on-chain validation.
+# 6. Architecture & Maintenance Notes
 The Stubbed Framework Strategy
 Location: /frameworks/stubbed-aptos-framework inside the container.
 Logic: We replaced implementation files with "Ghost Files".
@@ -188,7 +176,7 @@ Currently, Move.toml in app.py has # edition = "2024" commented out.
 Current State: Supports standard Move 1.0 (compatible with Move 2 features like phantom types).
 To Enable Move 2 (let mut): Uncomment that line in app.py. Note that strict Move 2 features might require updating the CLI binary in the Dockerfile if movement-move2-testnet becomes outdated.
 
-### 7. Deployment (Render)
+# 7. Deployment (Render)
 Build Command: (Handled by Docker)
 Environment:
 Docker Runtime.
@@ -197,14 +185,13 @@ Free Tier (512MB RAM and 0.1 CPU) is sufficient due to optimizations.
 
 Caching: If you modify app.py or the frameworks folder, you must use "Clear Build Cache & Deploy" in Render to ensure the new files are copied into the image.
 
-### 8. CLI Testing Guide (Linux/WSL)
+# 8. CLI Testing Guide (Linux/WSL)
 You can verify the backend status and compilation logic directly from your terminal using curl.
 Prerequisites
 curl: Installed by default on most Linux distros.
 jq (Optional): Highly recommended for formatting the JSON output.
 Install: sudo apt-get install jq
-
-#### A. Basic Sanity Check
+A. Basic Sanity Check
 Run this to confirm the server is reachable and the CLI is executable.
 code Bash
 
@@ -221,17 +208,8 @@ code JSON
   "modules": [ ... ],
   ...
 }
-
-#### Basic Sanity Check (With Address)
-Run this to confirm the server accepts a sender address.
-curl -s -X POST https://movement-sqto.onrender.com/compile \
-  -H "Content-Type: application/json" \
-  -d '{ 
-    "code": "module hello::sanity_check { public fun main() {} }",
-    "sender_address": "0xCAFE"
-  }' | jq
-
-#### B. Full Integration Test (Stub Verification)
+ 
+B. Full Integration Test (Stub Verification)
 This command tests the entire "Micro-Framework" by importing Coin, Table, Object, and ResourceAccount. Use this to prove to investors/devs that the lightweight architecture supports complex logic.
 Copy and paste this entire block:
 code Bash
@@ -240,9 +218,9 @@ code Bash
   -H "Content-Type: application/json" \
   -d '{
     "code": "module hello::final_edge_case { use std::signer; use std::vector; use std::option::{Self, Option}; use std::string::String; use aptos_framework::coin::{Self, Coin}; use aptos_framework::table::{Self, Table}; use aptos_framework::timestamp; use aptos_framework::object::{Self, Object}; use aptos_framework::resource_account; struct TestCoin has drop {} struct Vault has key { balances: Table<String, Coin<TestCoin>>, last_touch: u64, backup: Option<Coin<TestCoin>>, objects: vector<Object<TestCoin>> } public entry fun init(admin: &signer) { let (res, _) = resource_account::create_resource_account(admin, b\"vault_seed\"); let t = table::new<String, Coin<TestCoin>>(); let o = option::none<Coin<TestCoin>>(); let v = vector::empty<Object<TestCoin>>(); move_to(&res, Vault { balances: t, last_touch: timestamp::now_seconds(), backup: o, objects: v }); } public fun touch(user: &signer, c: Coin<TestCoin>, key: String) acquires Vault { let addr = signer::address_of(user); let vault = borrow_global_mut<Vault>(addr); table::add(&mut vault.balances, key, c); vault.last_touch = timestamp::now_seconds(); } }"
-  }' 
+  }' | jq
  
-#### C. Troubleshooting Common Errors
+C. Troubleshooting Common Errors
 Output / Error
 Meaning
 Fix
@@ -259,4 +237,33 @@ Check your code for typos (e.g., let mut in Move 1.0 mode).
 Missing Import.
 Ensure your Move code uses use aptos_framework::xxx;.
 
- 
+
+Option 2: Python Script Update (If you used the generator)
+If you are using the generate_docs.py script I gave you earlier, add this code block just before doc.save(...):
+code Python
+
+   8. CLI Testing
+    doc.add_heading('8. CLI Testing Guide (Linux/WSL)', level=1)
+    doc.add_paragraph('You can verify the backend status and compilation logic directly from your terminal using curl.')
+    
+    doc.add_heading('Basic Sanity Check', level=2)
+    basic_curl = """curl -s -X POST https://movement-sqto.onrender.com/compile \\
+  -H "Content-Type: application/json" \\
+  -d '{ "code": "module 0x1::sanity_check { public fun main() {} }" }' | jq"""
+    p = doc.add_paragraph(basic_curl)
+    p.style = 'No Spacing'
+    p.runs[0].font.name = 'Courier New'
+    p.runs[0].font.size = Pt(9)
+
+    doc.add_heading('Full Integration Test', level=2)
+    doc.add_paragraph('This tests Coin, Table, Object, and ResourceAccount imports:')
+    
+    complex_curl = """curl -s -X POST https://movement-sqto.onrender.com/compile \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "code": "module hello::final_edge_case { use std::signer; use std::vector; use std::option::{Self, Option}; use std::string::String; use aptos_framework::coin::{Self, Coin}; use aptos_framework::table::{Self, Table}; use aptos_framework::timestamp; use aptos_framework::object::{Self, Object}; use aptos_framework::resource_account; struct TestCoin has drop {} struct Vault has key { balances: Table<String, Coin<TestCoin>>, last_touch: u64, backup: Option<Coin<TestCoin>>, objects: vector<Object<TestCoin>> } public entry fun init(admin: &signer) { let (res, _) = resource_account::create_resource_account(admin, b\\"vault_seed\\"); let t = table::new<String, Coin<TestCoin>>(); let o = option::none<Coin<TestCoin>>(); let v = vector::empty<Object<TestCoin>>(); move_to(&res, Vault { balances: t, last_touch: timestamp::now_seconds(), backup: o, objects: v }); } public fun touch(user: &signer, c: Coin<TestCoin>, key: String) acquires Vault { let addr = signer::address_of(user); let vault = borrow_global_mut<Vault>(addr); table::add(&mut vault.balances, key, c); vault.last_touch = timestamp::now_seconds(); } }"
+  }' | jq"""
+    p = doc.add_paragraph(complex_curl)
+    p.style = 'No Spacing'
+    p.runs[0].font.name = 'Courier New'
+    p.runs[0].font.size = Pt(8)
