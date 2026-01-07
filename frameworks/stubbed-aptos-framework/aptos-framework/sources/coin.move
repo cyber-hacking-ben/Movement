@@ -2,8 +2,6 @@ module aptos_framework::coin {
     use std::signer;
     use std::string;
 
-    // FIX: 'phantom T' allows T to lack abilities.
-    // FIX: 'drop' allows Coin to be dropped (user request/stub convenience).
     struct Coin<phantom T> has store, drop {
         value: u64
     }
@@ -13,7 +11,21 @@ module aptos_framework::coin {
     struct FreezeCapability<phantom T> has copy, store {}
 
     public fun balance<T>(_addr: address): u64 { 0 }
+    public fun value<T>(c: &Coin<T>): u64 { c.value }
+    
+    // --- NEW FUNCTIONS ---
     public fun register<T>(_account: &signer) {}
+    
+    public fun is_account_registered<T>(_addr: address): bool {
+        true 
+    }
+
+    public fun withdraw<T>(_account: &signer, _amount: u64): Coin<T> {
+        abort 0
+    }
+
+    public fun deposit<T>(_addr: address, _coin: Coin<T>) {}
+    // ---------------------
 
     public fun mint<T>(_amount: u64, _cap: &MintCapability<T>): Coin<T> { abort 0 }
     public fun burn<T>(_coin: Coin<T>, _cap: &BurnCapability<T>) { abort 0 }
