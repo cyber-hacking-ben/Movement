@@ -30,9 +30,13 @@ RUN apt-get update && apt-get install -y \
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 ENV PATH="/root/.cargo/bin:$PATH"
 
-# 3. Install Aptos CLI
-RUN curl -fsSL "https://aptos.dev/scripts/install_cli.sh" | sh -s -- --generic-linux
-ENV PATH="/root/.localbin:$PATH"
+# 3. Install Movement CLI
+RUN curl -LO https://github.com/movementlabsxyz/homebrew-movement-cli/releases/download/bypass-homebrew/movement-move2-testnet-linux-x86_64.tar.gz \
+ && mkdir temp_extract \
+ && tar -xzf movement-move2-testnet-linux-x86_64.tar.gz -C temp_extract \
+ && chmod +x temp_extract/movement \
+ && mv temp_extract/movement /usr/local/bin/movement \
+ && rm -rf temp_extract movement-move2-testnet-linux-x86_64.tar.gz
 
 # 4. OPTIMIZED FRAMEWORK SETUP
 WORKDIR /frameworks

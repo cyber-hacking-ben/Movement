@@ -71,11 +71,12 @@ AptosFramework = {{ local = "/frameworks/stubbed-aptos-framework/aptos-framework
 
         try:
             result = subprocess.run(
-    ["aptos", "move", "compile", "--package-dir", tmp, "--save-metadata"],
-    capture_output=True,
-    text=True,
-    timeout=400
-)
+                ["movement", "move", "build"],
+                cwd=tmp,
+                capture_output=True,
+                text=True,
+                timeout=400
+            )
 
             # -------------------------------
             # Compilation failed
