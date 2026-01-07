@@ -13,26 +13,24 @@ module aptos_framework::primary_fungible_store {
         _icon_uri: String,
         _project_uri: String,
     ) {
+    }
+
+    public fun primary_store(_owner: address, _metadata: Object<Metadata>): Object<FungibleStore> {
         abort 0
     }
 
-    public fun primary_store(owner: address, metadata: Object<Metadata>): Object<FungibleStore> {
-        abort 0
-    }
-
-    public fun balance(account: address, metadata: Object<Metadata>): u64 {
+    public fun balance(_account: address, _metadata: Object<Metadata>): u64 {
         0
     }
 
-    public fun deposit(account: address, fa: FungibleAsset) {
-        let FungibleAsset { metadata: _, amount: _ } = fa;
+    public fun deposit(_account: address, _fa: FungibleAsset) {
+        // No logic needed, _fa drops automatically now
     }
 
-    public fun withdraw(account: &signer, metadata: Object<Metadata>, amount: u64): FungibleAsset {
+    public fun withdraw(_account: &signer, _metadata: Object<Metadata>, _amount: u64): FungibleAsset {
         abort 0
     }
 
-    public fun transfer(sender: &signer, metadata: Object<Metadata>, recipient: address, amount: u64) {
-        abort 0
+    public fun transfer(_sender: &signer, _metadata: Object<Metadata>, _recipient: address, _amount: u64) {
     }
 }
