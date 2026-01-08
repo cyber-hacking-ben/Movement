@@ -6,17 +6,8 @@ module aptos_framework::coin {
     use aptos_framework::system_addresses;
     use aptos_framework::optional_aggregator::{Self, OptionalAggregator};
     use aptos_framework::aggregator::Aggregator;
-    
-    use aptos_framework::table::Table; 
 
-    use aptos_framework::fungible_asset::{Self, FungibleAsset, Metadata, MintRef, TransferRef, BurnRef};
-    use aptos_framework::object::{Self, Object};
-    
-    // --- FIX IS HERE: Changed aptos_std to aptos_framework ---
-    use aptos_framework::type_info::TypeInfo; 
-    // ---------------------------------------------------------
-
-    // --- STRUCTS (With 'drop' added for safety) ---
+    // --- STRUCTS ---
     struct Coin<phantom CoinType> has store, drop {
         value: u64,
     }
@@ -43,10 +34,6 @@ module aptos_framework::coin {
         allow_upgrades: bool,
     }
 
-    struct CoinConversionMap has key {
-        coin_to_fungible_asset_map: Table<TypeInfo, Object<Metadata>>,
-    }
-
     // --- CAPABILITIES ---
     struct MintCapability<phantom CoinType> has copy, store {}
     struct FreezeCapability<phantom CoinType> has copy, store {}
@@ -57,8 +44,7 @@ module aptos_framework::coin {
     struct WithdrawEvent has drop, store { amount: u64 }
     struct CoinDeposit has drop, store { coin_type: String, account: address, amount: u64 }
     struct CoinWithdraw has drop, store { coin_type: String, account: address, amount: u64 }
-    struct PairCreation has drop, store { coin_type: TypeInfo, fungible_asset_metadata_address: address }
-
+    
     // --- READ FUNCTIONS ---
     public fun balance<CoinType>(_owner: address): u64 { 0 }
     public fun is_account_registered<CoinType>(_account_addr: address): bool { true }
@@ -75,7 +61,6 @@ module aptos_framework::coin {
         // Safe to be empty because Coin has 'drop'
     }
 
-    // Abort 0 is required here because it returns a Coin
     public fun withdraw<CoinType>(_account: &signer, _amount: u64): Coin<CoinType> {
         abort 0
     }
@@ -84,12 +69,10 @@ module aptos_framework::coin {
 
     public fun merge<CoinType>(_dst_coin: &mut Coin<CoinType>, _source_coin: Coin<CoinType>) {}
 
-    // Abort 0 required (Returns Coin)
     public fun extract<CoinType>(_coin: &mut Coin<CoinType>, _amount: u64): Coin<CoinType> {
         abort 0
     }
 
-    // Abort 0 required (Returns Coin)
     public fun extract_all<CoinType>(_coin: &mut Coin<CoinType>): Coin<CoinType> {
         abort 0
     }
@@ -97,7 +80,6 @@ module aptos_framework::coin {
     public fun destroy_zero<CoinType>(_coin: Coin<CoinType>) {}
 
     // --- INITIALIZATION ---
-    // Abort 0 required (Returns multiple Caps)
     public fun initialize<CoinType>(
         _account: &signer,
         _name: String,
@@ -119,31 +101,27 @@ module aptos_framework::coin {
     }
 
     // --- CAPABILITY ACTIONS ---
-    // Abort 0 required (Returns Coin)
     public fun mint<CoinType>(_amount: u64, _cap: &MintCapability<CoinType>): Coin<CoinType> {
         abort 0
     }
 
-    public fun burn<CoinType>(_coin: Coin<CoinType>, _cap: &BurnCapability<CoinType>) {}
+    // FIX: Added abort 0 because BurnCapability doesn't have drop
+    public fun burn<CoinType>(_coin: Coin<CoinType>, _cap: &BurnCapability<CoinType>) {
+        abort 0
+    }
 
-    public fun freeze_coin_store<CoinType>(_account_addr: address, _cap: &FreezeCapability<CoinType>) {}
+    // FIX: Added abort 0 because FreezeCapability doesn't have drop
+    public fun freeze_coin_store<CoinType>(_account_addr: address, _cap: &FreezeCapability<CoinType>) {
+        abort 0
+    }
     
-    public fun unfreeze_coin_store<CoinType>(_account_addr: address, _cap: &FreezeCapability<CoinType>) {}
-
-    public fun destroy_mint_cap<CoinType>(_cap: MintCapability<CoinType>) {}
-    public fun destroy_freeze_cap<CoinType>(_cap: FreezeCapability<CoinType>) {}
-    public fun destroy_burn_cap<CoinType>(_cap: BurnCapability<CoinType>) {}
-
-    // --- INTEROP ---
-    public fun paired_metadata<CoinType>(): Option<Object<Metadata>> {
-        option::none()
-    }
-
-    public fun coin_to_fungible_asset<CoinType>(_coin: Coin<CoinType>): FungibleAsset {
+    // FIX: Added abort 0
+    public fun unfreeze_coin_store<CoinType>(_account_addr: address, _cap: &FreezeCapability<CoinType>) {
         abort 0
     }
 
-    public fun ensure_paired_metadata<CoinType>(): Object<Metadata> {
-        abort 0
-    }
+    // FIX: Added abort 0 to all destructors
+    public fun destroy_mint_cap<CoinType>(_cap: MintCapability<CoinType>) { abort 0 }
+    public fun destroy_freeze_cap<CoinType>(_cap: FreezeCapability<CoinType>) { abort 0 }
+    public fun destroy_burn_cap<CoinType>(_cap: BurnCapability<CoinType>) { abort 0 }
 }
