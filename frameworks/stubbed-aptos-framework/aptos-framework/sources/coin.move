@@ -45,6 +45,11 @@ module aptos_framework::coin {
         coin.value
     }
 
+    // Withdraw returns a Coin<T> representing the amount withdrawn
+    public fun withdraw<T>(_account: &signer, _amount: u64): Coin<T> {
+        abort 0
+    }
+
     public fun deposit<T>(_addr: address, _coin: Coin<T>) {
         // Since Coin has 'drop' in our stub, we can just leave this empty.
         // The compiler sees the variable goes out of scope here and is happy.
