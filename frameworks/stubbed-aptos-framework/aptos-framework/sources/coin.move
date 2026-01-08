@@ -7,12 +7,14 @@ module aptos_framework::coin {
     use aptos_framework::optional_aggregator::{Self, OptionalAggregator};
     use aptos_framework::aggregator::Aggregator;
     
-    // We use aptos_framework::table because that is where we saved the stub
     use aptos_framework::table::Table; 
 
     use aptos_framework::fungible_asset::{Self, FungibleAsset, Metadata, MintRef, TransferRef, BurnRef};
     use aptos_framework::object::{Self, Object};
-    use aptos_std::type_info::TypeInfo;
+    
+    // --- FIX IS HERE: Changed aptos_std to aptos_framework ---
+    use aptos_framework::type_info::TypeInfo; 
+    // ---------------------------------------------------------
 
     // --- STRUCTS (With 'drop' added for safety) ---
     struct Coin<phantom CoinType> has store, drop {
@@ -41,7 +43,6 @@ module aptos_framework::coin {
         allow_upgrades: bool,
     }
 
-    // FIX: Switched to aptos_framework::table to match your folder structure
     struct CoinConversionMap has key {
         coin_to_fungible_asset_map: Table<TypeInfo, Object<Metadata>>,
     }
