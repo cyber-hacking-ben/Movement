@@ -12,7 +12,7 @@ module aptos_framework::account {
         guid_creation_num: u64,
     }
 
-    struct SignerCapability has drop, st re { account: address }
+    struct SignerCapability has drop, store { account: address }
 
     public fun create_account(_auth_key: address) {}
 
