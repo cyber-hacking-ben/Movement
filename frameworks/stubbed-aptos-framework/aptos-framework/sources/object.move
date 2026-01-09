@@ -59,4 +59,18 @@ module aptos_framework::object {
     public fun generate_delete_ref(_ref: &ConstructorRef): DeleteRef { abort 0 }
     public fun generate_extend_ref(_ref: &ConstructorRef): ExtendRef { abort 0 }
     public fun generate_transfer_ref(_ref: &ConstructorRef): TransferRef { abort 0 }
+
+    // Stub for deleting the object
+    public fun delete(_ref: DeleteRef) {
+        // In stub: do nothing (or abort 0 if you want strictness, but void is fine here)
+    }
+
+    // Stub to help generating signer from address (simplification for the test)
+    public fun generate_extend_ref_for_test(_addr: address): ExtendRef {
+        abort 0
+    }
+
+    public fun generate_signer_for_extending(_ref: &ExtendRef): signer {
+        abort 0
+    }
 }
