@@ -54,7 +54,8 @@ COPY frameworks/stubbed-aptos-framework /frameworks/stubbed-aptos-framework
 # C) FORCE-PATCH the Stub's dependency path
 # We rewrite the Stub's Move.toml to point to our clean /frameworks/move-stdlib
 # This ensures it finds the dependency regardless of what you had locally.
-RUN sed -i 's|MoveStdlib = .*|MoveStdlib = { local = "/frameworks/move-stdlib" }|' /frameworks/stubbed-aptos-framework/aptos-framework/Move.toml
+
+RUN find /frameworks/stubbed-aptos-framework -name "Move.toml" -exec sed -i 's|MoveStdlib = .*|MoveStdlib = { local = "/frameworks/move-stdlib" }|' {} +
 
 # 5. Setup Python App
 WORKDIR /app

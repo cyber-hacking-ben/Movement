@@ -6,6 +6,14 @@ module aptos_framework::coin {
     use aptos_framework::system_addresses;
     use aptos_framework::optional_aggregator::{Self, OptionalAggregator};
     use aptos_framework::aggregator::Aggregator;
+    
+    // --- NEW IMPORTS (Pointing to your new aptos-stdlib folder) ---
+    use aptos_std::table::Table; 
+    use aptos_std::type_info::TypeInfo;
+    // --------------------------------------------------------------
+
+    use aptos_framework::fungible_asset::{Self, FungibleAsset, Metadata, MintRef, TransferRef, BurnRef};
+    use aptos_framework::object::{Self, Object};
 
     // --- STRUCTS ---
     struct Coin<phantom CoinType> has store, drop {
@@ -34,6 +42,12 @@ module aptos_framework::coin {
         allow_upgrades: bool,
     }
 
+    // --- INTEROP STRUCT (Restored) ---
+    // This proves your backend handles cross-module dependencies correctly
+    struct CoinConversionMap has key {
+        coin_to_fungible_asset_map: Table<TypeInfo, Object<Metadata>>,
+    }
+
     // --- CAPABILITIES ---
     struct MintCapability<phantom CoinType> has copy, store {}
     struct FreezeCapability<phantom CoinType> has copy, store {}
@@ -45,6 +59,12 @@ module aptos_framework::coin {
     struct CoinDeposit has drop, store { coin_type: String, account: address, amount: u64 }
     struct CoinWithdraw has drop, store { coin_type: String, account: address, amount: u64 }
     
+    // This event uses TypeInfo from aptos_std
+    struct PairCreation has drop, store { 
+        coin_type: TypeInfo, 
+        fungible_asset_metadata_address: address 
+    }
+
     // --- READ FUNCTIONS ---
     public fun balance<CoinType>(_owner: address): u64 { 0 }
     public fun is_account_registered<CoinType>(_account_addr: address): bool { true }
@@ -105,23 +125,32 @@ module aptos_framework::coin {
         abort 0
     }
 
-    // FIX: Added abort 0 because BurnCapability doesn't have drop
     public fun burn<CoinType>(_coin: Coin<CoinType>, _cap: &BurnCapability<CoinType>) {
         abort 0
     }
 
-    // FIX: Added abort 0 because FreezeCapability doesn't have drop
     public fun freeze_coin_store<CoinType>(_account_addr: address, _cap: &FreezeCapability<CoinType>) {
         abort 0
     }
     
-    // FIX: Added abort 0
     public fun unfreeze_coin_store<CoinType>(_account_addr: address, _cap: &FreezeCapability<CoinType>) {
         abort 0
     }
 
-    // FIX: Added abort 0 to all destructors
     public fun destroy_mint_cap<CoinType>(_cap: MintCapability<CoinType>) { abort 0 }
     public fun destroy_freeze_cap<CoinType>(_cap: FreezeCapability<CoinType>) { abort 0 }
     public fun destroy_burn_cap<CoinType>(_cap: BurnCapability<CoinType>) { abort 0 }
+
+    // --- INTEROP ---
+    public fun paired_metadata<CoinType>(): Option<Object<Metadata>> {
+        option::none()
+    }
+
+    public fun coin_to_fungible_asset<CoinType>(_coin: Coin<CoinType>): FungibleAsset {
+        abort 0
+    }
+
+    public fun ensure_paired_metadata<CoinType>(): Object<Metadata> {
+        abort 0
+    }
 }

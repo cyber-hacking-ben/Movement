@@ -48,12 +48,20 @@ upgrade_policy = "compatible"
 
 [addresses]
 std = "0x1"
+aptos_std = "0x1"   
 aptos_framework = "0x1"
 hello = "{user_addr}"   
 
 [dependencies]
 # Note the double curly braces below: {{ ... }}
+
+# 1. Real Stdlib
 MoveStdlib = {{ local = "/frameworks/move-stdlib" }}
+
+# 2. NEW: Aptos Stdlib (Table, TypeInfo)
+AptosStdlib = {{ local = "/frameworks/stubbed-aptos-framework/aptos-stdlib" }}
+
+# 3. Aptos Framework (Coin, Account, Object)
 AptosFramework = {{ local = "/frameworks/stubbed-aptos-framework/aptos-framework" }}
 """
 

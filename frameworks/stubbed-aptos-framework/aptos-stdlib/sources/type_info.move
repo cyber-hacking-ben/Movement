@@ -1,4 +1,4 @@
-module aptos_framework::type_info {
+module aptos_std::type_info {
     use std::string::String;
 
     struct TypeInfo has copy, drop, store {

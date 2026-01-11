@@ -1,0 +1,11 @@
+[package]
+name = "AptosStdlib"
+version = "1.0.0"
+
+[addresses]
+aptos_std = "0x1"
+std = "0x1"
+
+[dependencies]
+# Depends on the clean MoveStdlib we download in Docker
+MoveStdlib = { local = "../../move-stdlib" }

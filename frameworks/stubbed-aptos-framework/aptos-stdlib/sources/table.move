@@ -1,4 +1,4 @@
-module aptos_framework::table {
+module aptos_std::table {
     // Added 'phantom' to avoid "unused type parameter" errors in struct definition
     struct Table<phantom K, phantom V> has store {}
 
