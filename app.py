@@ -38,32 +38,31 @@ def compile_move(request: CompileRequest):
 
     # 2. Dynamic Move.toml Generation
     # We use an f-string to inject {user_addr}
-    # IMPORTANT: We use double braces {{ }} for the dependencies to escape them!
+    # IMPORTANT: We use double braces {{ }} for the dependencies to escape them!# 2. Dynamic Move.toml Generation
     dynamic_move_toml = f"""\
-[package]
-name = "compiler_package"
-version = "1.0.0"
-upgrade_policy = "compatible"
-#edition = "2024"
+    [package]
+    name = "compiler_package"
+    version = "1.0.0"
+    upgrade_policy = "compatible"
 
-[addresses]
-std = "0x1"
-aptos_std = "0x1"   
-aptos_framework = "0x1"
-hello = "{user_addr}"   
+    [addresses]
+    std = "0x1"
+    aptos_std = "0x1"
+    aptos_framework = "0x1"
 
-[dependencies]
-# Note the double curly braces below: {{ ... }}
+    # --- DYNAMIC ALIASES ---
+    # All of these map to the user's wallet address.
+    # This gives the user freedom to choose their preferred namespace.
+    hello = "{user_addr}"
+    sender = "{user_addr}"
+    movement = "{user_addr}"
 
-# 1. Real Stdlib
-MoveStdlib = {{ local = "/frameworks/move-stdlib" }}
-
-# 2. NEW: Aptos Stdlib (Table, TypeInfo)
-AptosStdlib = {{ local = "/frameworks/stubbed-aptos-framework/aptos-stdlib" }}
-
-# 3. Aptos Framework (Coin, Account, Object)
-AptosFramework = {{ local = "/frameworks/stubbed-aptos-framework/aptos-framework" }}
-"""
+    [dependencies]
+    # Note the double curly braces below: {{ ... }}
+    MoveStdlib = {{ local = "/frameworks/move-stdlib" }}
+    AptosStdlib = {{ local = "/frameworks/stubbed-aptos-framework/aptos-stdlib" }}
+    AptosFramework = {{ local = "/frameworks/stubbed-aptos-framework/aptos-framework" }}
+    """
 
     with tempfile.TemporaryDirectory() as tmp:
         sources_dir = os.path.join(tmp, "sources")
