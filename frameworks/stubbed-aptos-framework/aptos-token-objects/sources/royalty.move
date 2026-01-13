@@ -1,4 +1,9 @@
 module aptos_token_objects::royalty {
+    // --- FIX: Added Missing Imports ---
+    use std::option::{Self, Option};
+    use aptos_framework::object::Object;
+    // ----------------------------------
+
     struct Royalty has drop, store, copy {
         numerator: u64,
         denominator: u64,
@@ -9,7 +14,8 @@ module aptos_token_objects::royalty {
         abort 0
     }
 
-    public fun get<T: key>(_obj: aptos_framework::object::Object<T>): Option<Royalty> {
-        std::option::none()
+    // Explicitly typed option::none<Royalty>() to help inference
+    public fun get<T: key>(_obj: Object<T>): Option<Royalty> {
+        option::none<Royalty>()
     }
 }
