@@ -20,25 +20,24 @@ module aptos_std::simple_map {
         false
     }
 
-    // Standard 'borrow' (Critical for reading data)
     public fun borrow<K: store, V: store>(_map: &SimpleMap<K, V>, _key: &K): &V {
         abort 0
     }
 
-    // Standard 'borrow_mut' (Critical for updating data)
     public fun borrow_mut<K: store, V: store>(_map: &mut SimpleMap<K, V>, _key: &K): &mut V {
         abort 0
     }
 
+    // FIX: Added abort 0 because K and V might not have drop
     public fun add<K: store, V: store>(_map: &mut SimpleMap<K, V>, _key: K, _value: V) {
+        abort 0
     }
 
-    // Used in your Launchpad contract
+    // FIX: Added abort 0
     public fun upsert<K: store, V: store>(_map: &mut SimpleMap<K, V>, _key: K, _value: V): (Option<K>, Option<V>) {
         abort 0
     }
 
-    // Standard remove (Returns key and value)
     public fun remove<K: store + drop, V: store>(_map: &mut SimpleMap<K, V>, _key: &K): (K, V) {
         abort 0
     }
