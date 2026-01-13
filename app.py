@@ -44,24 +44,22 @@ def compile_move(request: CompileRequest):
     name = "compiler_package"
     version = "1.0.0"
     upgrade_policy = "compatible"
+    edition = "2024"  
 
     [addresses]
     std = "0x1"
     aptos_std = "0x1"
     aptos_framework = "0x1"
-
-    # --- DYNAMIC ALIASES ---
-    # All of these map to the user's wallet address.
-    # This gives the user freedom to choose their preferred namespace.
+    aptos_token_objects = "0x1" 
     hello = "{user_addr}"
     sender = "{user_addr}"
     movement = "{user_addr}"
 
     [dependencies]
-    # Note the double curly braces below: {{ ... }}
     MoveStdlib = {{ local = "/frameworks/move-stdlib" }}
     AptosStdlib = {{ local = "/frameworks/stubbed-aptos-framework/aptos-stdlib" }}
     AptosFramework = {{ local = "/frameworks/stubbed-aptos-framework/aptos-framework" }}
+    AptosTokenObjects = {{ local = "/frameworks/stubbed-aptos-framework/aptos-token-objects" }}
     """
 
     with tempfile.TemporaryDirectory() as tmp:

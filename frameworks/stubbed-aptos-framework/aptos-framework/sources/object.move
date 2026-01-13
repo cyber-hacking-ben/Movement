@@ -73,4 +73,8 @@ module aptos_framework::object {
     public fun generate_signer_for_extending(_ref: &ExtendRef): signer {
         abort 0
     }
+
+    public fun create_object_address(_creator: &address, _seed: vector<u8>): address {
+        @0x0
+    }
 }
